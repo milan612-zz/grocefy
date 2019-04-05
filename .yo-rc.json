@@ -1,0 +1,35 @@
+{
+    "generator-jhipster": {
+        "promptValues": {
+            "packageName": "com.abc.grocefy"
+        },
+        "jhipsterVersion": "5.8.2",
+        "applicationType": "gateway",
+        "baseName": "grocefy",
+        "packageName": "com.abc.grocefy",
+        "packageFolder": "com/abc/grocefy",
+        "serverPort": "8090",
+        "authenticationType": "jwt",
+        "cacheProvider": "hazelcast",
+        "enableHibernateCache": true,
+        "websocket": false,
+        "databaseType": "sql",
+        "devDatabaseType": "h2Disk",
+        "prodDatabaseType": "postgresql",
+        "searchEngine": "elasticsearch",
+        "messageBroker": false,
+        "serviceDiscoveryType": "eureka",
+        "buildTool": "maven",
+        "enableSwaggerCodegen": true,
+        "jwtSecretKey": "Njg1YWZlOTVjZmY2ZDJhY2RlMWYxYjZlZTg5YjJlMTA3YjIwODU1YmI1NmRiMTgwN2Y1NzU2Y2QzOTg5YzBmZjFhYTQ1ZjI1Mjk3ZTg5MGE5Mzc2Y2VhZTVhZjY0OWM3ZjRiMzE1MGUxYTE4NDg0NDcwMTI3ZmVlOTQyYWM0OWU=",
+        "clientFramework": "angularX",
+        "useSass": true,
+        "clientPackageManager": "npm",
+        "testFrameworks": ["gatling", "protractor"],
+        "jhiPrefix": "jhi",
+        "entitySuffix": "",
+        "dtoSuffix": "DTO",
+        "otherModules": [],
+        "enableTranslation": false
+    }
+}
