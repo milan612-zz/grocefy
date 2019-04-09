@@ -1,0 +1,43 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <div *ngIf="shoppingList">
+            <h2><span>Shopping List</span> {{shoppingList.id}}</h2>
+            <hr>
+            <jhi-alert-error></jhi-alert-error>
+            <dl class="row-md jh-entity-details">
+                <dt><span>Title</span></dt>
+                <dd>
+                    <span>{{shoppingList.title}}</span>
+                </dd>
+                <dt><span>List</span></dt>
+                <dd>
+                    <span>{{shoppingList.list}}</span>
+                </dd>
+                <dt><span>State</span></dt>
+                <dd>
+                    <span>{{shoppingList.state}}</span>
+                </dd>
+                <dt><span>Owner</span></dt>
+                <dd>
+                    {{shoppingList.owner?.login}}
+                </dd>
+                <dt><span>Shopper</span></dt>
+                <dd>
+                    {{shoppingList.shopper?.login}}
+                </dd>
+            </dl>
+
+            <button type="submit"
+                    (click)="previousState()"
+                    class="btn btn-info">
+                <fa-icon [icon]="'arrow-left'"></fa-icon>&nbsp;<span> Back</span>
+            </button>
+
+            <button type="button"
+                    [routerLink]="['/shopping-list', shoppingList.id, 'edit']"
+                    class="btn btn-primary">
+                <fa-icon [icon]="'pencil-alt'"></fa-icon>&nbsp;<span> Edit</span>
+            </button>
+        </div>
+    </div>
+</div>
