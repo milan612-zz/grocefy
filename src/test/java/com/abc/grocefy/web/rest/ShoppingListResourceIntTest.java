@@ -1,12 +1,22 @@
 package com.abc.grocefy.web.rest;
 
-import com.abc.grocefy.GrocefyApp;
-
-import com.abc.grocefy.domain.ShoppingList;
-import com.abc.grocefy.repository.ShoppingListRepository;
-import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
-import com.abc.grocefy.web.rest.errors.ExceptionTranslator;
-
+import static com.abc.grocefy.web.rest.TestUtil.createFormattingConversionService;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.Collections;
+import java.util.List;
+import javax.persistence.EntityManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,23 +32,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
-
-import javax.persistence.EntityManager;
-import java.util.Collections;
-import java.util.List;
-
-
-import static com.abc.grocefy.web.rest.TestUtil.createFormattingConversionService;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.hamcrest.Matchers.hasItem;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import com.abc.grocefy.GrocefyApp;
+import com.abc.grocefy.domain.ShoppingList;
 import com.abc.grocefy.domain.enumeration.State;
+import com.abc.grocefy.repository.ShoppingListRepository;
+import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
+import com.abc.grocefy.service.UserService;
+import com.abc.grocefy.web.rest.errors.ExceptionTranslator;
 /**
  * Test class for the ShoppingListResource REST controller.
  *
@@ -83,6 +84,9 @@ public class ShoppingListResourceIntTest {
     @Autowired
     private Validator validator;
 
+    @Autowired
+    private UserService userService;
+
     private MockMvc restShoppingListMockMvc;
 
     private ShoppingList shoppingList;
@@ -90,7 +94,8 @@ public class ShoppingListResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ShoppingListResource shoppingListResource = new ShoppingListResource(shoppingListRepository, mockShoppingListSearchRepository);
+        final ShoppingListResource shoppingListResource = new ShoppingListResource(shoppingListRepository,
+            mockShoppingListSearchRepository,userService);
         this.restShoppingListMockMvc = MockMvcBuilders.standaloneSetup(shoppingListResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

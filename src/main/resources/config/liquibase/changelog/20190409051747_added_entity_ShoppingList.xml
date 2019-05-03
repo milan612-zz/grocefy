@@ -32,11 +32,15 @@
             <column name="state" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
+
             <column name="owner_id" type="bigint">
-                <constraints unique="true" nullable="true" uniqueConstraintName="ux_shopping_list_owner_id" />
-            </column>            <column name="shopper_id" type="bigint">
-                <constraints unique="true" nullable="true" uniqueConstraintName="ux_shopping_list_shopper_id" />
+                <constraints nullable="true" />
             </column>
+
+            <column name="shopper_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
+
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here, do not remove-->
         </createTable>
         

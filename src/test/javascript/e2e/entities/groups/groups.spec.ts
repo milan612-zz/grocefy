@@ -41,8 +41,9 @@ describe('Groups e2e test', () => {
         await groupsComponentsPage.clickOnCreateButton();
         await promise.all([
             groupsUpdatePage.setTitleInput('title'),
-            groupsUpdatePage.setUserListInput('userList'),
-            groupsUpdatePage.userSelectLastOption()
+            groupsUpdatePage.statusSelectLastOption(),
+            groupsUpdatePage.setUserListInput('userList')
+            // groupsUpdatePage.userSelectLastOption(),
         ]);
         expect(await groupsUpdatePage.getTitleInput()).to.eq('title');
         expect(await groupsUpdatePage.getUserListInput()).to.eq('userList');

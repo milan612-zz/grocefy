@@ -1,17 +1,24 @@
 package com.abc.grocefy.domain;
 
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import javax.persistence.*;
-import javax.validation.constraints.*;
-
-import org.springframework.data.elasticsearch.annotations.Document;
 import java.io.Serializable;
 import java.util.Objects;
-
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.elasticsearch.annotations.Document;
 import com.abc.grocefy.domain.enumeration.State;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * A ShoppingList.
@@ -41,12 +48,12 @@ public class ShoppingList implements Serializable {
     @Column(name = "state")
     private State state;
 
-    @OneToOne
-    @JoinColumn(unique = true)
+    @ManyToOne
+    @JsonIgnoreProperties("shoppingLists")
     private User owner;
 
-    @OneToOne
-    @JoinColumn(unique = true)
+    @ManyToOne
+    @JsonIgnoreProperties("shoppingLists")
     private User shopper;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove

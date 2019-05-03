@@ -1,7 +1,6 @@
 package com.abc.grocefy.domain;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -10,7 +9,11 @@ import javax.validation.constraints.*;
 
 import org.springframework.data.elasticsearch.annotations.Document;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Objects;
+
+import com.abc.grocefy.domain.enumeration.Status;
 
 /**
  * A Groups.
@@ -31,14 +34,21 @@ public class Groups implements Serializable {
     @Column(name = "title")
     private String title;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status;
+
     
     @Lob
     @Column(name = "user_list", nullable = false)
     private String userList;
 
-    @ManyToOne
-    @JsonIgnoreProperties("groups")
-    private User user;
+    @ManyToMany
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @JoinTable(name = "groups_user",
+               joinColumns = @JoinColumn(name = "groups_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    private Set<User> users = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
@@ -62,6 +72,19 @@ public class Groups implements Serializable {
         this.title = title;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public Groups status(Status status) {
+        this.status = status;
+        return this;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public String getUserList() {
         return userList;
     }
@@ -75,17 +98,27 @@ public class Groups implements Serializable {
         this.userList = userList;
     }
 
-    public User getUser() {
-        return user;
+    public Set<User> getUsers() {
+        return users;
     }
 
-    public Groups user(User user) {
-        this.user = user;
+    public Groups users(Set<User> users) {
+        this.users = users;
         return this;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public Groups addUser(User user) {
+        this.users.add(user);
+        return this;
+    }
+
+    public Groups removeUser(User user) {
+        this.users.remove(user);
+        return this;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
@@ -114,6 +147,7 @@ public class Groups implements Serializable {
         return "Groups{" +
             "id=" + getId() +
             ", title='" + getTitle() + "'" +
+            ", status='" + getStatus() + "'" +
             ", userList='" + getUserList() + "'" +
             "}";
     }

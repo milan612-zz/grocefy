@@ -6,6 +6,11 @@
             "fieldType": "String"
         },
         {
+            "fieldName": "status",
+            "fieldType": "Status",
+            "fieldValues": "ACTIVE,INACTIVE"
+        },
+        {
             "fieldName": "userList",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "text",
@@ -16,11 +21,12 @@
     ],
     "relationships": [
         {
-            "relationshipType": "many-to-one",
+            "relationshipType": "many-to-many",
             "otherEntityName": "user",
             "otherEntityRelationshipName": "groups",
             "relationshipName": "user",
-            "otherEntityField": "login"
+            "otherEntityField": "login",
+            "ownerSide": true
         }
     ],
     "changelogDate": "20190409051748",

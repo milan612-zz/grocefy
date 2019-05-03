@@ -5,7 +5,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { of } from 'rxjs';
 import { take, map } from 'rxjs/operators';
 import { GroupsService } from 'app/entities/groups/groups.service';
-import { IGroups, Groups } from 'app/shared/model/groups.model';
+import { IGroups, Groups, Status } from 'app/shared/model/groups.model';
 
 describe('Service Tests', () => {
     describe('Groups Service', () => {
@@ -21,7 +21,7 @@ describe('Service Tests', () => {
             service = injector.get(GroupsService);
             httpMock = injector.get(HttpTestingController);
 
-            elemDefault = new Groups(0, 'AAAAAAA', 'AAAAAAA');
+            elemDefault = new Groups(0, 'AAAAAAA', Status.ACTIVE, 'AAAAAAA');
         });
 
         describe('Service methods', async () => {
@@ -56,6 +56,7 @@ describe('Service Tests', () => {
                 const returnedFromService = Object.assign(
                     {
                         title: 'BBBBBB',
+                        status: 'BBBBBB',
                         userList: 'BBBBBB'
                     },
                     elemDefault
@@ -74,6 +75,7 @@ describe('Service Tests', () => {
                 const returnedFromService = Object.assign(
                     {
                         title: 'BBBBBB',
+                        status: 'BBBBBB',
                         userList: 'BBBBBB'
                     },
                     elemDefault

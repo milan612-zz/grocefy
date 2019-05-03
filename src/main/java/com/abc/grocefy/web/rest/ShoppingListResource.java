@@ -1,30 +1,36 @@
 package com.abc.grocefy.web.rest;
-import com.abc.grocefy.domain.ShoppingList;
-import com.abc.grocefy.repository.ShoppingListRepository;
-import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
-import com.abc.grocefy.web.rest.errors.BadRequestAlertException;
-import com.abc.grocefy.web.rest.util.HeaderUtil;
-import com.abc.grocefy.web.rest.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Optional;
+import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import com.abc.grocefy.domain.ShoppingList;
+import com.abc.grocefy.domain.enumeration.State;
+import com.abc.grocefy.repository.ShoppingListRepository;
+import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
+import com.abc.grocefy.security.SecurityUtils;
+import com.abc.grocefy.service.UserService;
+import com.abc.grocefy.web.rest.errors.BadRequestAlertException;
+import com.abc.grocefy.web.rest.util.HeaderUtil;
+import com.abc.grocefy.web.rest.util.PaginationUtil;
+import io.github.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing ShoppingList.
@@ -41,9 +47,13 @@ public class ShoppingListResource {
 
     private final ShoppingListSearchRepository shoppingListSearchRepository;
 
-    public ShoppingListResource(ShoppingListRepository shoppingListRepository, ShoppingListSearchRepository shoppingListSearchRepository) {
+    private final UserService userService;
+
+    public ShoppingListResource(ShoppingListRepository shoppingListRepository,
+        ShoppingListSearchRepository shoppingListSearchRepository,UserService userService) {
         this.shoppingListRepository = shoppingListRepository;
         this.shoppingListSearchRepository = shoppingListSearchRepository;
+        this.userService = userService;
     }
 
     /**
@@ -59,6 +69,10 @@ public class ShoppingListResource {
         if (shoppingList.getId() != null) {
             throw new BadRequestAlertException("A new shoppingList cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        // Override user to logged-in user
+        shoppingList.setOwner(userService.getUserWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get());
+        // Override state to OPEN
+        shoppingList.setState(State.OPEN);
         ShoppingList result = shoppingListRepository.save(shoppingList);
         shoppingListSearchRepository.save(result);
         return ResponseEntity.created(new URI("/api/shopping-lists/" + result.getId()))
@@ -81,6 +95,7 @@ public class ShoppingListResource {
         if (shoppingList.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
+        if ()
         ShoppingList result = shoppingListRepository.save(shoppingList);
         shoppingListSearchRepository.save(result);
         return ResponseEntity.ok()
@@ -97,7 +112,7 @@ public class ShoppingListResource {
     @GetMapping("/shopping-lists")
     public ResponseEntity<List<ShoppingList>> getAllShoppingLists(Pageable pageable) {
         log.debug("REST request to get a page of ShoppingLists");
-        Page<ShoppingList> page = shoppingListRepository.findAll(pageable);
+        Page<ShoppingList> page = shoppingListRepository.findByCurrentUser(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/shopping-lists");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

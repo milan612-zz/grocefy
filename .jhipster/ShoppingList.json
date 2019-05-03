@@ -21,20 +21,18 @@
     ],
     "relationships": [
         {
-            "relationshipType": "one-to-one",
+            "relationshipType": "many-to-one",
             "otherEntityName": "user",
             "otherEntityRelationshipName": "shoppingList",
             "relationshipName": "owner",
-            "otherEntityField": "login",
-            "ownerSide": true
+            "otherEntityField": "login"
         },
         {
-            "relationshipType": "one-to-one",
+            "relationshipType": "many-to-one",
             "otherEntityName": "user",
             "otherEntityRelationshipName": "shoppingList",
             "relationshipName": "shopper",
-            "otherEntityField": "login",
-            "ownerSide": true
+            "otherEntityField": "login"
         }
     ],
     "changelogDate": "20190409051747",

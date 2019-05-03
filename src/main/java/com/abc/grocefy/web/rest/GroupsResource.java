@@ -1,4 +1,25 @@
 package com.abc.grocefy.web.rest;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Optional;
+import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import com.abc.grocefy.domain.Groups;
 import com.abc.grocefy.repository.GroupsRepository;
 import com.abc.grocefy.repository.search.GroupsSearchRepository;
@@ -6,25 +27,6 @@ import com.abc.grocefy.web.rest.errors.BadRequestAlertException;
 import com.abc.grocefy.web.rest.util.HeaderUtil;
 import com.abc.grocefy.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * REST controller for managing Groups.
@@ -92,13 +94,19 @@ public class GroupsResource {
      * GET  /groups : get all the groups.
      *
      * @param pageable the pagination information
+     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many)
      * @return the ResponseEntity with status 200 (OK) and the list of groups in body
      */
     @GetMapping("/groups")
-    public ResponseEntity<List<Groups>> getAllGroups(Pageable pageable) {
+    public ResponseEntity<List<Groups>> getAllGroups(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
         log.debug("REST request to get a page of Groups");
-        Page<Groups> page = groupsRepository.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/groups");
+        Page<Groups> page;
+        if (eagerload) {
+            page = groupsRepository.findAllWithEagerRelationships(pageable);
+        } else {
+            page = groupsRepository.findAll(pageable);
+        }
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, String.format("/api/groups?eagerload=%b", eagerload));
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
@@ -111,7 +119,7 @@ public class GroupsResource {
     @GetMapping("/groups/{id}")
     public ResponseEntity<Groups> getGroups(@PathVariable Long id) {
         log.debug("REST request to get Groups : {}", id);
-        Optional<Groups> groups = groupsRepository.findById(id);
+        Optional<Groups> groups = groupsRepository.findOneWithEagerRelationships(id);
         return ResponseUtil.wrapOrNotFound(groups);
     }
 

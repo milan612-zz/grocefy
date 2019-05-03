@@ -73,6 +73,7 @@ class GroupsGatlingTest extends Simulation {
             .body(StringBody("""{
                 "id":null
                 , "title":"SAMPLE_TEXT"
+                , "status":"ACTIVE"
                 , "userList":null
                 }""")).asJSON
             .check(status.is(201))

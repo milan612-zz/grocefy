@@ -27,6 +27,7 @@ export class GroupsUpdatePage {
     saveButton = element(by.id('save-entity'));
     cancelButton = element(by.id('cancel-save'));
     titleInput = element(by.id('field_title'));
+    statusSelect = element(by.id('field_status'));
     userListInput = element(by.id('field_userList'));
     userSelect = element(by.id('field_user'));
 
@@ -40,6 +41,21 @@ export class GroupsUpdatePage {
 
     async getTitleInput() {
         return this.titleInput.getAttribute('value');
+    }
+
+    async setStatusSelect(status) {
+        await this.statusSelect.sendKeys(status);
+    }
+
+    async getStatusSelect() {
+        return this.statusSelect.element(by.css('option:checked')).getText();
+    }
+
+    async statusSelectLastOption() {
+        await this.statusSelect
+            .all(by.tagName('option'))
+            .last()
+            .click();
     }
 
     async setUserListInput(userList) {

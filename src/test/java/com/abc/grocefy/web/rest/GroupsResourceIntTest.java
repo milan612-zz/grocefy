@@ -10,6 +10,7 @@ import com.abc.grocefy.web.rest.errors.ExceptionTranslator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +27,7 @@ import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
 
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.abc.grocefy.domain.enumeration.Status;
 /**
  * Test class for the GroupsResource REST controller.
  *
@@ -50,11 +53,17 @@ public class GroupsResourceIntTest {
     private static final String DEFAULT_TITLE = "AAAAAAAAAA";
     private static final String UPDATED_TITLE = "BBBBBBBBBB";
 
+    private static final Status DEFAULT_STATUS = Status.ACTIVE;
+    private static final Status UPDATED_STATUS = Status.INACTIVE;
+
     private static final String DEFAULT_USER_LIST = "AAAAAAAAAA";
     private static final String UPDATED_USER_LIST = "BBBBBBBBBB";
 
     @Autowired
     private GroupsRepository groupsRepository;
+
+    @Mock
+    private GroupsRepository groupsRepositoryMock;
 
     /**
      * This repository is mocked in the com.abc.grocefy.repository.search test package.
@@ -104,6 +113,7 @@ public class GroupsResourceIntTest {
     public static Groups createEntity(EntityManager em) {
         Groups groups = new Groups()
             .title(DEFAULT_TITLE)
+            .status(DEFAULT_STATUS)
             .userList(DEFAULT_USER_LIST);
         return groups;
     }
@@ -129,6 +139,7 @@ public class GroupsResourceIntTest {
         assertThat(groupsList).hasSize(databaseSizeBeforeCreate + 1);
         Groups testGroups = groupsList.get(groupsList.size() - 1);
         assertThat(testGroups.getTitle()).isEqualTo(DEFAULT_TITLE);
+        assertThat(testGroups.getStatus()).isEqualTo(DEFAULT_STATUS);
         assertThat(testGroups.getUserList()).isEqualTo(DEFAULT_USER_LIST);
 
         // Validate the Groups in Elasticsearch
@@ -169,9 +180,43 @@ public class GroupsResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(groups.getId().intValue())))
             .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE.toString())))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].userList").value(hasItem(DEFAULT_USER_LIST.toString())));
     }
     
+    @SuppressWarnings({"unchecked"})
+    public void getAllGroupsWithEagerRelationshipsIsEnabled() throws Exception {
+        GroupsResource groupsResource = new GroupsResource(groupsRepositoryMock, mockGroupsSearchRepository);
+        when(groupsRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        MockMvc restGroupsMockMvc = MockMvcBuilders.standaloneSetup(groupsResource)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        restGroupsMockMvc.perform(get("/api/groups?eagerload=true"))
+        .andExpect(status().isOk());
+
+        verify(groupsRepositoryMock, times(1)).findAllWithEagerRelationships(any());
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public void getAllGroupsWithEagerRelationshipsIsNotEnabled() throws Exception {
+        GroupsResource groupsResource = new GroupsResource(groupsRepositoryMock, mockGroupsSearchRepository);
+            when(groupsRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+            MockMvc restGroupsMockMvc = MockMvcBuilders.standaloneSetup(groupsResource)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        restGroupsMockMvc.perform(get("/api/groups?eagerload=true"))
+        .andExpect(status().isOk());
+
+            verify(groupsRepositoryMock, times(1)).findAllWithEagerRelationships(any());
+    }
+
     @Test
     @Transactional
     public void getGroups() throws Exception {
@@ -184,6 +229,7 @@ public class GroupsResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(groups.getId().intValue()))
             .andExpect(jsonPath("$.title").value(DEFAULT_TITLE.toString()))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
             .andExpect(jsonPath("$.userList").value(DEFAULT_USER_LIST.toString()));
     }
 
@@ -209,6 +255,7 @@ public class GroupsResourceIntTest {
         em.detach(updatedGroups);
         updatedGroups
             .title(UPDATED_TITLE)
+            .status(UPDATED_STATUS)
             .userList(UPDATED_USER_LIST);
 
         restGroupsMockMvc.perform(put("/api/groups")
@@ -221,6 +268,7 @@ public class GroupsResourceIntTest {
         assertThat(groupsList).hasSize(databaseSizeBeforeUpdate);
         Groups testGroups = groupsList.get(groupsList.size() - 1);
         assertThat(testGroups.getTitle()).isEqualTo(UPDATED_TITLE);
+        assertThat(testGroups.getStatus()).isEqualTo(UPDATED_STATUS);
         assertThat(testGroups.getUserList()).isEqualTo(UPDATED_USER_LIST);
 
         // Validate the Groups in Elasticsearch
@@ -282,6 +330,7 @@ public class GroupsResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(groups.getId().intValue())))
             .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].userList").value(hasItem(DEFAULT_USER_LIST.toString())));
     }
 

@@ -9,13 +9,19 @@
                 <dd>
                     <span>{{groups.title}}</span>
                 </dd>
+                <dt><span>Status</span></dt>
+                <dd>
+                    <span>{{groups.status}}</span>
+                </dd>
                 <dt><span>User List</span></dt>
                 <dd>
                     <span>{{groups.userList}}</span>
                 </dd>
                 <dt><span>User</span></dt>
                 <dd>
-                    {{groups.user?.login}}
+                    <span *ngFor="let user of groups.users; let last = last">
+                        {{user.login}}{{last ? '' : ', '}}
+                    </span>
                 </dd>
             </dl>
 
