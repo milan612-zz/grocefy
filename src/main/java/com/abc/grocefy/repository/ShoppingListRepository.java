@@ -32,6 +32,10 @@ public interface ShoppingListRepository extends JpaRepository<ShoppingList, Long
         countQuery = "select count(shopping_list) from ShoppingList shopping_list")
     Page<ShoppingList> findByCurrentUser(Pageable pageable);
 
-
-
+//    @Query("update ShoppingList shopping_list set shopping_list.shopper = ?#{principal} where shopping_list.id =:id "
+//        + "AND shopping_list.shopper is null")
+//    int updateShopper(@Param("id") Long id);
+//
+//    @Query("update ShoppingList shopping_list set shopping_list.shopper = null where shopping_list.id =:id ")
+//    int removeShopper(@Param("id") Long id);
 }

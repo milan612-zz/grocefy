@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.abc.grocefy.domain.ShoppingList;
+import com.abc.grocefy.domain.User;
 import com.abc.grocefy.domain.enumeration.State;
 import com.abc.grocefy.repository.ShoppingListRepository;
 import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
@@ -81,6 +82,50 @@ public class ShoppingListResource {
     }
 
     /**
+     * POST  /shopping-lists/assign : Set shopper to loggedIn user
+     *
+     * @param id of the shoppingList to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated shoppingList,
+     * or with status 400 (Bad Request) if the shoppingList is not valid,
+     * or with status 500 (Internal Server Error) if the shoppingList couldn't be updated
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping("/shopping-lists/assignshopper/{id}")
+    public ResponseEntity<ShoppingList> assignShopper(@PathVariable Long id) throws URISyntaxException {
+        log.debug("REST request to update ShoppingList : {}", id);
+        final User user = userService.getUserWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        ShoppingList shoppingList = shoppingListRepository.findById(id).get();
+        shoppingList.setShopper(user);
+        ShoppingList result = shoppingListRepository.save(shoppingList);
+        shoppingListSearchRepository.save(result);
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shoppingList.getId().toString()))
+            .body(result);
+}
+
+    /**
+     * POST  /shopping-lists/removeshopper/{id} : Set shopper to null
+     *
+     * @param id of the shoppingList to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated shoppingList,
+     * or with status 400 (Bad Request) if the shoppingList is not valid,
+     * or with status 500 (Internal Server Error) if the shoppingList couldn't be updated
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping("/shopping-lists/removeshopper/{id}")
+    public ResponseEntity<ShoppingList> unAssignShopper(@PathVariable Long id) throws URISyntaxException {
+        log.debug("REST request to update ShoppingList : {}", id);
+        ShoppingList shoppingList = shoppingListRepository.findById(id).orElse(new ShoppingList());
+        validateRequest(shoppingList,shoppingList);
+        shoppingList.setShopper(null);
+        ShoppingList result = shoppingListRepository.save(shoppingList);
+        shoppingListSearchRepository.save(result);
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shoppingList.getId().toString()))
+            .body(result);
+    }
+
+    /**
      * PUT  /shopping-lists : Updates an existing shoppingList.
      *
      * @param shoppingList the shoppingList to update
@@ -92,15 +137,46 @@ public class ShoppingListResource {
     @PutMapping("/shopping-lists")
     public ResponseEntity<ShoppingList> updateShoppingList(@Valid @RequestBody ShoppingList shoppingList) throws URISyntaxException {
         log.debug("REST request to update ShoppingList : {}", shoppingList);
-        if (shoppingList.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        }
-        if ()
+        ShoppingList shoppingListFromDB =
+            shoppingListRepository.findById(shoppingList.getId()).orElse(new ShoppingList());
+        validateRequest(shoppingList,shoppingListFromDB);
         ShoppingList result = shoppingListRepository.save(shoppingList);
         shoppingListSearchRepository.save(result);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shoppingList.getId().toString()))
             .body(result);
+    }
+
+    private void validateRequest(final ShoppingList shoppingListFromRequest,final ShoppingList shoppingListFromDB) {
+        if (shoppingListFromRequest.getId() == null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+        final User user = userService.getUserWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+
+        if (!compareUsers(shoppingListFromRequest.getOwner(),shoppingListFromDB.getOwner())){
+            throw new BadRequestAlertException ("Owner can't be edited", ENTITY_NAME, "invalidrequest");
+        }
+
+        if (!compareUsers(shoppingListFromRequest.getShopper(),shoppingListFromDB.getShopper())){
+            throw new BadRequestAlertException ("Shopper can't be edited, please use "
+                + "/shopping-lists/assignshopper/{id} or /shopping-lists/removeshopper/{id} endpoints",
+                ENTITY_NAME, "invalidrequest");
+        }
+
+        if (!compareUsers(shoppingListFromRequest.getOwner(),user) && !compareUsers(shoppingListFromRequest.getShopper(),user) ){
+            throw new BadRequestAlertException (user.getLogin() + " is not allowed to make changes in this list",
+                ENTITY_NAME, "invaliduser");
+        }
+    }
+
+
+    /**
+     * Assuming ID will never be 0
+     */
+    private boolean compareUsers(User x, User y){
+        long xID = x !=null ? x.getId() : 0;
+        long yID = y !=null ? y.getId() : 0;
+        return xID == yID;
     }
 
     /**
