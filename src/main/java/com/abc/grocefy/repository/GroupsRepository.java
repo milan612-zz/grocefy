@@ -9,12 +9,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.abc.grocefy.domain.Groups;
+import org.javers.spring.annotation.JaversSpringDataAuditable;
 
 /**
  * Spring Data  repository for the Groups entity.
  */
 @SuppressWarnings("unused")
 @Repository
+@JaversSpringDataAuditable
 public interface GroupsRepository extends JpaRepository<Groups, Long> {
 
     @Query(value = "select distinct groups from Groups groups left join fetch groups.users",

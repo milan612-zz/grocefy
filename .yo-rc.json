@@ -31,5 +31,8 @@
         "dtoSuffix": "DTO",
         "otherModules": [],
         "enableTranslation": false
+    },
+    "generator-jhipster-entity-audit": {
+        "auditFramework": "javers"
     }
 }

@@ -97,7 +97,6 @@ public class ShoppingListResource {
         ShoppingList shoppingList = shoppingListRepository.findById(id).get();
         shoppingList.setShopper(user);
         ShoppingList result = shoppingListRepository.save(shoppingList);
-        shoppingListSearchRepository.save(result);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shoppingList.getId().toString()))
             .body(result);
@@ -119,7 +118,6 @@ public class ShoppingListResource {
         validateRequest(shoppingList,shoppingList);
         shoppingList.setShopper(null);
         ShoppingList result = shoppingListRepository.save(shoppingList);
-        shoppingListSearchRepository.save(result);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shoppingList.getId().toString()))
             .body(result);
@@ -188,7 +186,9 @@ public class ShoppingListResource {
     @GetMapping("/shopping-lists")
     public ResponseEntity<List<ShoppingList>> getAllShoppingLists(Pageable pageable) {
         log.debug("REST request to get a page of ShoppingLists");
-        Page<ShoppingList> page = shoppingListRepository.findByCurrentUser(pageable);
+        final User user = userService.getUserWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+
+        Page<ShoppingList> page = shoppingListRepository.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/shopping-lists");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

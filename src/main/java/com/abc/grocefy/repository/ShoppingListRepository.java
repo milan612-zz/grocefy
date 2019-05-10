@@ -1,6 +1,7 @@
 package com.abc.grocefy.repository;
 
 import java.util.List;
+import org.javers.spring.annotation.JaversSpringDataAuditable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,7 @@ import com.abc.grocefy.domain.ShoppingList;
  */
 @SuppressWarnings("unused")
 @Repository
+@JaversSpringDataAuditable
 public interface ShoppingListRepository extends JpaRepository<ShoppingList, Long> {
 
     @Query("select shopping_list from ShoppingList shopping_list where shopping_list.owner.login = ?#{principal.username}")
@@ -27,7 +29,7 @@ public interface ShoppingListRepository extends JpaRepository<ShoppingList, Long
     List<ShoppingList> findByShopperIsCurrentUser();
 
     @Query(value = "select shopping_list from ShoppingList shopping_list where shopping_list.owner.login = "
-        + "?#{principal.username} OR shopping_list.shopper.login = "
+        + "?#{principal.username} AND shopping_list.shopper.login = "
         + "?#{principal.username}",
         countQuery = "select count(shopping_list) from ShoppingList shopping_list")
     Page<ShoppingList> findByCurrentUser(Pageable pageable);
