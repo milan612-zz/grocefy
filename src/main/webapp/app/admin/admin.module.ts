@@ -1,7 +1,7 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { GrocefySharedModule } from 'app/shared';
-import { EntityAuditModule } from './entity-audit/entity-audit.module';
+import { EntityAuditModule } from 'app/admin/entity-audit/entity-audit.module';
 /* jhipster-needle-add-admin-module-import - JHipster will add admin modules imports here */
 
 import {
@@ -23,7 +23,7 @@ import {
 @NgModule({
     imports: [
         GrocefySharedModule,
-        RouterModule.forChild(adminState)
+        RouterModule.forChild(adminState),
         EntityAuditModule
         /* jhipster-needle-add-admin-module - JHipster will add admin modules here */
     ],

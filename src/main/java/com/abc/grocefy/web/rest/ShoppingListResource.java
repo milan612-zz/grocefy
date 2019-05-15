@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.abc.grocefy.domain.Authority;
 import com.abc.grocefy.domain.ShoppingList;
 import com.abc.grocefy.domain.User;
 import com.abc.grocefy.domain.enumeration.State;
 import com.abc.grocefy.repository.ShoppingListRepository;
 import com.abc.grocefy.repository.search.ShoppingListSearchRepository;
+import com.abc.grocefy.security.AuthoritiesConstants;
 import com.abc.grocefy.security.SecurityUtils;
 import com.abc.grocefy.service.UserService;
 import com.abc.grocefy.web.rest.errors.BadRequestAlertException;
@@ -183,12 +186,43 @@ public class ShoppingListResource {
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of shoppingLists in body
      */
-    @GetMapping("/shopping-lists")
-    public ResponseEntity<List<ShoppingList>> getAllShoppingLists(Pageable pageable) {
+    @GetMapping(path = "/shopping-lists")
+    public ResponseEntity<List<ShoppingList>> getAllShoppingLists(Pageable pageable,
+        @RequestParam(value = "filterBy", required=false, defaultValue = "") Set<String> filterCriteria) {
         log.debug("REST request to get a page of ShoppingLists");
         final User user = userService.getUserWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        Page<ShoppingList> page = null;
+        Authority userRole = new Authority();
+        userRole.setName(AuthoritiesConstants.ADMIN);
 
-        Page<ShoppingList> page = shoppingListRepository.findAll(pageable);
+        // admin user return all lists.
+        if (user.getAuthorities().contains(userRole)){
+            page = shoppingListRepository.findAll(pageable);
+        }
+        // all own by logged-in user.
+        else if (filterCriteria.size() == 1 && filterCriteria.contains("owner")){
+            page = shoppingListRepository.findByOwner(user, pageable);
+        }
+        // all shopping/shopped by logged-in user.
+        else if (filterCriteria.size() == 1 && filterCriteria.contains("shopper")){
+            page = shoppingListRepository.findByShopper(user,pageable);
+        }
+        // all OPEN own by logged-in user.
+        else if (filterCriteria.size() == 2 && filterCriteria.contains("owner") && filterCriteria.contains("open") ){
+            page = shoppingListRepository.findByOwnerAndState(user, State.OPEN, pageable);
+        }
+        // all PICKED by logged-in user.
+        else if (filterCriteria.size() == 2 && filterCriteria.contains("shopper") && filterCriteria.contains("picked")){
+            page = shoppingListRepository.findByShopperAndState(user,State.PICKED, pageable);
+        }
+        else if (filterCriteria.size() == 1 && filterCriteria.contains("groups")){
+            page = shoppingListRepository.findByOwnerInGroups(user.getId(), pageable);
+        }
+        else /*((filterCriteria.size() == 2 && filterCriteria.contains("shopper") && filterCriteria.contains
+        ("owner")) ||
+            (filterCriteria.size() ==0))*/{
+            page = shoppingListRepository.findByOwnerOrShopper(user, user, pageable);
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/shopping-lists");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
